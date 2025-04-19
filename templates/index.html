@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poetry Word Predictor</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Poetry Word Predictor</h1>
+        <div class="poetry-box">
+            <textarea id="poem-input" placeholder="Start typing your poem here..."></textarea>
+            <div class="prediction-area">
+                <p>Suggested next word: <span id="next-word">...</span></p>
+                <button id="add-word">Add Word</button>
+            </div>
+            <div class="controls">
+                <label for="creativity">Creativity:</label>
+                <input type="range" id="creativity" min="0.1" max="2.0" step="0.1" value="1.0">
+                <span id="creativity-value">1.0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const poemInput = document.getElementById('poem-input');
+        const nextWordSpan = document.getElementById('next-word');
+        const addWordBtn = document.getElementById('add-word');
+        const creativitySlider = document.getElementById('creativity');
+        const creativityValue = document.getElementById('creativity-value');
+        
+        let debounceTimer;
+        
+        // Update creativity display
+        creativitySlider.addEventListener('input', () => {
+            creativityValue.textContent = creativitySlider.value;
+        });
+        
+        poemInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                if(poemInput.value.trim().length > 0) {
+                    fetch('/generate', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ 
+                            text: poemInput.value,
+                            temperature: parseFloat(creativitySlider.value)
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.next_word) {
+                            nextWordSpan.textContent = data.next_word;
+                        } else if (data.error) {
+                            console.error(data.error);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+                } else {
+                    nextWordSpan.textContent = '...';
+                }
+            }, 500);
+        });
+        
+        addWordBtn.addEventListener('click', () => {
+            if(nextWordSpan.textContent !== '...') {
+                poemInput.value += (poemInput.value ? ' ' : '') + nextWordSpan.textContent;
+                poemInput.dispatchEvent(new Event('input'));
+                poemInput.focus();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+
+# Core Requirements
+flask==2.0.1
+tensorflow==2.6.0
+numpy==1.19.5
+scikit-learn==0.24.2
+requests==2.26.0
+
+# NLP/Text Processing
+keras==2.6.0
+h5py==3.1.0  # For model saving/loading
